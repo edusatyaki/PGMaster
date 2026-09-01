@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL | PG Mastery</title>
+    <meta name="description" content="__COUNT__ PostgreSQL functions with real, verified output from PostgreSQL __PGVERSION__.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-orange: #f97316;
+            --accent-blue: #38bdf8;
+            --border-color: #30363d;
+            --code-font: 'Fira Code', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding-top: 80px;
+            padding-bottom: 100px;
+        }
+
+        .ambient-light {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: -1;
+            background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
+        }
+
+        .progress-container {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .progress-info { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+        .progress-bar-wrapper { flex: 1; min-width: 150px; margin: 0 10px; background: #21262d; height: 6px; border-radius: 3px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.4s ease; border-radius: 2px; }
+
+        .reset-btn {
+            background: transparent; border: 1px solid #da3633; color: #da3633;
+            padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
+        }
+        .reset-btn:hover { background: #da3633; color: #fff; }
+
+        header { padding: 3rem 2rem 1rem; text-align: center; }
+        h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; color: #f0f6fc; margin-bottom: 0.5rem; }
+        .tagline { color: var(--text-secondary); }
+        .verified-badge {
+            display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem;
+            border: 1px solid #238636; color: #3fb950; background: rgba(35, 134, 54, 0.1);
+            border-radius: 20px; padding: 5px 16px; font-size: 0.8rem; font-weight: 600;
+        }
+
+        .controls-wrapper { max-width: 1200px; margin: 1rem auto; display: flex; gap: 1rem; padding: 0 2rem; flex-wrap: wrap; }
+        .search-input, .filter-select {
+            flex: 1; padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-color);
+            background: #0d1117; color: #fff; font-family: var(--code-font); font-size: 0.9rem; min-width: 200px;
+        }
+        .search-input:focus, .filter-select:focus { outline: none; border-color: var(--accent-blue); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        .result-count { color: var(--text-secondary); font-size: 0.8rem; margin: 0 0 0.6rem 2px; }
+
+        .table-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        table { width: 100%; border-collapse: collapse; min-width: 760px; }
+        th { text-align: left; padding: 1rem; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); background: #161b22; }
+        td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
+        #master-body tr:hover { background: #21262d; }
+
+        .func-name { font-family: var(--code-font); color: var(--accent-blue); font-weight: 500; font-size: 0.95rem; white-space: nowrap; }
+        .sig-text { font-family: var(--code-font); color: #6e7681; font-size: 0.75rem; display: block; margin-top: 3px; white-space: nowrap; }
+        .desc-text { font-size: 0.88rem; color: #8b949e; line-height: 1.5; }
+        .empty-state { padding: 3rem; text-align: center; color: var(--text-secondary); }
+
+        /* Modal / SQL Editor */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 2000; padding: 20px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .notebook-window {
+            width: 100%; max-width: 900px; background: #fff; border-radius: 8px;
+            display: flex; flex-direction: column; height: 85vh; color: #000;
+            overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        }
+
+        .notebook-header { background: #1e1e1e; padding: 8px 20px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #d4d4d4; display: flex; justify-content: space-between; align-items: center; }
+        .notebook-header .fn { font-family: var(--code-font); color: #38bdf8; }
+        .notebook-body { flex: 1; overflow-y: auto; padding: 30px; font-family: var(--code-font); font-size: 14px; background: #f5f5f5; }
+
+        .doc-block { margin-bottom: 22px; font-family: sans-serif; }
+        .doc-sig { font-family: var(--code-font); font-size: 13px; background: #eef1f4; border: 1px solid #dde1e6; border-radius: 4px; padding: 8px 12px; color: #24292f; display: inline-block; }
+        .doc-desc { font-size: 13px; color: #444; margin-top: 10px; line-height: 1.6; }
+
+        .schema-container { margin-bottom: 25px; padding: 15px; background: #e8eaed; border-radius: 6px; border: 1px solid #ccc; font-family: sans-serif; }
+        .schema-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; margin-bottom: 10px; }
+        .schema-tables { display: flex; gap: 20px; flex-wrap: wrap; }
+        .schema-table { flex: 1; min-width: 200px; background: #fff; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+        .schema-table-head { background: #d0d7de; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #c0c7ce; color: #24292f; }
+        .schema-table-body { overflow-x: auto; background: #fff; }
+
+        .context-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: sans-serif; min-width: unset; }
+        .context-table th { background: #f6f8fa; color: #57606a; font-weight: 600; text-align: left; padding: 6px 10px; border-bottom: 1px solid #d0d7de; font-size: 11px; text-transform: none; letter-spacing: normal; border-right: 1px solid #e1e4e8; }
+        .context-table td { padding: 6px 10px; border-bottom: 1px solid #e1e4e8; border-right: 1px solid #e1e4e8; color: #24292f; }
+        .context-table tr:last-child td { border-bottom: none; }
+        .context-table th:last-child, .context-table td:last-child { border-right: none; }
+
+        .cell { margin-bottom: 25px; display: block; }
+        .cell-input { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+        .prompt { color: #888; user-select: none; font-size: 12px; font-family: sans-serif; font-weight: bold; }
+        .input-area { flex: 1; background: #1e1e1e; color: #d4d4d4; border-radius: 4px; padding: 15px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; }
+        .input-area.active { border-left: 4px solid var(--accent-blue); }
+        .input-area.setup { border-left: 4px solid #8b949e; font-size: 12.5px; opacity: 0.92; }
+
+        .output-area { margin-top: 10px; font-family: sans-serif; font-size: 13px; color: #333; overflow-x: auto; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .sql-msg { color: #2e7d32; font-family: var(--code-font); font-size: 13px; white-space: pre-wrap; }
+        .sql-note { color: #8a6d3b; font-family: sans-serif; font-size: 12.5px; line-height: 1.6; }
+        .volatile-note { color: #6e7681; font-family: sans-serif; font-size: 11.5px; margin-top: 8px; }
+
+        .dataframe { width: 100%; border-collapse: collapse; font-size: 13px; min-width: unset; }
+        .dataframe th { background: #f5f5f5; color: #333; font-weight: 600; text-align: left; padding: 8px; border: 1px solid #ddd; border-bottom: 2px solid #ccc; white-space: nowrap; text-transform: none; letter-spacing: normal; font-family: var(--code-font); font-size: 12px; }
+        .dataframe td { padding: 8px; border: 1px solid #ddd; color: #333; font-family: var(--code-font); font-size: 12.5px; vertical-align: top; }
+        .dataframe td.wrap { white-space: pre-wrap; word-break: break-word; }
+        .dataframe tr:nth-child(even) { background: #fafafa; }
+        .dataframe tr:hover { background: #f0f7ff; }
+
+        .sql-kw { color: #569cd6; font-weight: bold; }
+        .sql-str { color: #ce9178; }
+        .sql-num { color: #b5cea8; }
+        .sql-cmt { color: #6a9955; font-style: italic; }
+
+        .play-btn { background: transparent; border: 1px solid var(--accent-blue); color: var(--accent-blue); width: 32px; height: 32px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .play-btn:hover { background: var(--accent-blue); color: #000; }
+        .checkbox-custom { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue); flex-shrink: 0; }
+
+        .fixed-footer {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem; text-align: center; font-size: 0.9rem; z-index: 1000;
+        }
+        .fixed-footer a { color: var(--accent-blue); text-decoration: none; font-weight: 600; }
+
+        @media (max-width: 768px) {
+            body { padding-top: 120px; }
+            header { padding: 1.5rem 1rem 0.5rem; }
+            .controls-wrapper { padding: 0 1rem; flex-direction: column; }
+            .search-input, .filter-select { width: 100%; min-width: unset; }
+            .container { padding: 0 1rem; }
+            .modal-overlay { padding: 10px; }
+            .notebook-window { height: 95vh; }
+            .notebook-body { padding: 15px; }
+            .schema-tables { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-light"></div>
+
+    <div class="progress-container">
+        <span class="progress-info">PG Mastery</span>
+        <div class="progress-bar-wrapper">
+            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+        <span id="progress-text" class="progress-info">0/__COUNT__</span>
+        <button class="reset-btn" onclick="resetProgress()">Reset</button>
+    </div>
+
+    <header>
+        <h1>PG Master</h1>
+        <p class="tagline">Every PostgreSQL function. Exact syntax. Real, executed output.</p>
+        <div class="verified-badge">&#10003; __COUNT__ functions executed on PostgreSQL __PGVERSION__</div>
+    </header>
+
+    <div class="controls-wrapper">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search function, signature or description...">
+        <select id="catFilter" class="filter-select">
+            <option value="all">All Categories</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <div class="result-count" id="result-count"></div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th width="50">&#10003;</th>
+                        <th width="150">Category</th>
+                        <th width="230">Function</th>
+                        <th>Explanation</th>
+                        <th width="70">Demo</th>
+                    </tr>
+                </thead>
+                <tbody id="master-body"></tbody>
+            </table>
+            <div class="empty-state" id="empty-state" style="display:none">No function matches that search.</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="notebook-window">
+            <div class="notebook-header">
+                <span><span style="color:#38bdf8">&#9654;</span> psql &mdash; <span class="fn" id="header-fn"></span></span>
+                <button onclick="closeModal()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:#fff;">&times;</button>
+            </div>
+            <div class="notebook-body" id="notebook-body">
+
+                <div class="doc-block">
+                    <div class="doc-sig" id="doc-sig"></div>
+                    <div class="doc-desc" id="doc-desc"></div>
+                </div>
+
+                <div class="schema-container" id="schema-view" style="display:none">
+                    <div class="schema-title">Database Data Context:</div>
+                    <div class="schema-tables">
+                        <div class="schema-table" id="schema-emp" style="display:none;">
+                            <div class="schema-table-head">&#128199; employees</div>
+                            <div class="schema-table-body">
+                                <table class="context-table">
+                                    <thead>
+                                        <tr><th>id</th><th>name</th><th>dept_id</th><th>salary</th><th>hire_date</th><th>email</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>1</td><td>Alice</td><td>101</td><td>70000</td><td>2019-03-15</td><td>alice@corp.io</td></tr>
+                                        <tr><td>2</td><td>Bob</td><td>102</td><td>85000</td><td>2020-07-01</td><td>bob@corp.io</td></tr>
+                                        <tr><td>3</td><td>Charlie</td><td>101</td><td>60000</td><td>2021-11-23</td><td>charlie@corp.io</td></tr>
+                                        <tr><td>4</td><td>Diana</td><td>102</td><td>92000</td><td>2018-01-09</td><td>diana@corp.io</td></tr>
+                                        <tr><td>5</td><td>Evan</td><td><i>NULL</i></td><td>55000</td><td>2022-05-30</td><td><i>NULL</i></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="schema-table" id="schema-dept" style="display:none;">
+                            <div class="schema-table-head">&#127970; departments</div>
+                            <div class="schema-table-body">
+                                <table class="context-table">
+                                    <thead>
+                                        <tr><th>dept_id</th><th>dept_name</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>101</td><td>IT</td></tr>
+                                        <tr><td>102</td><td>Sales</td></tr>
+                                        <tr><td>103</td><td>HR</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cell" id="setup-cell" style="display:none">
+                    <div class="cell-input">
+                        <div class="prompt">Setup:</div>
+                        <div class="input-area setup" id="setup-box"></div>
+                    </div>
+                </div>
+
+                <div class="cell">
+                    <div class="cell-input">
+                        <div class="prompt">Query:</div>
+                        <div class="input-area active" id="code-box"></div>
+                    </div>
+                    <div class="prompt" style="margin-top: 15px;">Result:</div>
+                    <div class="output-area" id="output-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="fixed-footer">
+        Ideation &amp; development <a href="https://github.com/edusatyaki" target="_blank">Satyaki Das</a> | PG Innovation v_01.0.0
+    </footer>
+
+    <script>
+        const DATA = __PAYLOAD__;
+        const NULLTOK = "⟪NULL⟫";
+        const CATCOLOR = {}, CATLABEL = {};
+        DATA.cats.forEach(c => { CATCOLOR[c.id] = c.color; CATLABEL[c.id] = c.label; });
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // HTML TABLE GENERATOR FOR REAL SQL RESULTS
+        function createSQLTable(headers, rows) {
+            const hHtml = headers.map(h => `<th>${esc(h)}</th>`).join('');
+            const rHtml = rows.map(r => {
+                const dHtml = r.map(d => {
+                    if (d === NULLTOK) return '<td><i style="color:#aaa">NULL</i></td>';
+                    if (d === '') return '<td></td>';
+                    const cls = (d.length > 60 || d.indexOf('\n') >= 0) ? ' class="wrap"' : '';
+                    return `<td${cls}>${esc(d)}</td>`;
+                }).join('');
+                return `<tr>${dHtml}</tr>`;
+            }).join('');
+            return `<table class="dataframe"><thead><tr>${hHtml}</tr></thead><tbody>${rHtml}</tbody></table>`;
+        }
+
+        function renderOutput(o) {
+            if (o.x) return `<div class="sql-note"><b>Reference output.</b> ${esc(o.m)}</div>`;
+            if (o.m !== undefined) return `<span class="sql-msg">${esc(o.m)}</span>`;
+            let html = '';
+            if (o.p) html += o.p.map(l => `<div class="sql-msg">${esc(l)}</div>`).join('') + '<div style="height:8px"></div>';
+            html += createSQLTable(o.h, o.r);
+            html += `<div class="volatile-note">${o.r.length} row${o.r.length === 1 ? '' : 's'}</div>`;
+            return html;
+        }
+
+        // SYNTAX HIGHLIGHTER
+        const KEYWORDS = ['SELECT','FROM','WHERE','GROUP BY','HAVING','ORDER BY','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE','CREATE TABLE','CREATE FUNCTION','CREATE PROCEDURE','CREATE TRIGGER','CREATE INDEX','CREATE VIEW','CREATE TYPE','CREATE SEQUENCE','ALTER TABLE','DROP TABLE','TRUNCATE','JOIN','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL OUTER JOIN','LATERAL','ON','AS','DISTINCT','BETWEEN','AND','OR','NOT','IN','LIKE','ILIKE','SIMILAR TO','IS NULL','IS NOT NULL','IS DISTINCT FROM','IS NOT DISTINCT FROM','UNION','EXCEPT','INTERSECT','EXISTS','CASE','WHEN','THEN','ELSE','END','PRIMARY KEY','FOREIGN KEY','REFERENCES','DEFAULT','WITH','WITHIN GROUP','FILTER','OVER','PARTITION BY','ROWS BETWEEN','RANGE','GROUPS','UNBOUNDED PRECEDING','CURRENT ROW','UNBOUNDED FOLLOWING','WINDOW','ORDINALITY','ROWS FROM','RETURNING','ON CONFLICT','DO UPDATE','EXCLUDED','GENERATED ALWAYS AS IDENTITY','LANGUAGE','RETURNS','RETURN','BEGIN','DECLARE','IF','ELSIF','CALL','EXECUTE FUNCTION','FOR EACH ROW','FOR EACH STATEMENT','AFTER','BEFORE','EXPLAIN','ANALYZE','VACUUM','GRANT','REVOKE','COMMIT','ROLLBACK','CAST','ASC','DESC','NULLS LAST','NULLS FIRST','VARIADIC','ROLLUP','CUBE','GROUPING SETS','PASSING','COLUMNS','PLACING','FOR','ARRAY','ROW','TRUE','FALSE','NULL','INTERVAL','TIMESTAMP','TIMESTAMPTZ','DATE','TIME','NUMERIC','INTEGER','BIGINT','TEXT','BOOLEAN','SERIAL','AT TIME ZONE','OVERLAPS','ANY','ALL','SOME'];
+        const KW_RE = new RegExp('\\b(' + KEYWORDS.slice().sort((a, b) => b.length - a.length)
+            .map(k => k.replace(/ /g, '\\s+')).join('|') + ')\\b', 'gi');
+
+        function highlightSQL(str) {
+            let out = esc(str);
+            const stash = [];
+            const keep = h => { stash.push(h); return 'QQ' + (stash.length - 1) + 'QQ'; };
+            out = out.replace(/--[^\n]*/g, m => keep(`<span class="sql-cmt">${m}</span>`));
+            out = out.replace(/\$\$[\s\S]*?\$\$/g, m => keep(`<span class="sql-str">${m}</span>`));
+            out = out.replace(/'(?:[^']|'')*'/g, m => keep(`<span class="sql-str">${m}</span>`));
+            out = out.replace(KW_RE, m => `<span class="sql-kw">${m}</span>`);
+            out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="sql-num">$1</span>');
+            return out.replace(/QQ(\d+)QQ/g, (_, i) => stash[+i]);
+        }
+
+        const funcs = DATA.funcs;
+        document.getElementById('progress-text').textContent = `0/${funcs.length}`;
+
+        function init() {
+            const sel = document.getElementById('catFilter');
+            const counts = {};
+            funcs.forEach(f => counts[f.c] = (counts[f.c] || 0) + 1);
+            DATA.cats.forEach(c => {
+                const o = document.createElement('option');
+                o.value = c.id;
+                o.textContent = `${c.label} (${counts[c.id] || 0})`;
+                sel.appendChild(o);
+            });
+
+            const body = document.getElementById('master-body');
+            body.innerHTML = funcs.map((m, i) => {
+                const colour = CATCOLOR[m.c] || '#f97316';
+                const key = `pg-v1-${m.c}-${m.n}`;
+                const isChecked = localStorage.getItem(key) === 'true';
+                const label = (CATLABEL[m.c] || m.c).replace(/^\d+\.\s*/, '');
+                return `<tr class="func-row" data-cat="${esc(m.c)}" data-search="${esc((m.n + ' ' + m.g + ' ' + m.d).toLowerCase())}">
+                    <td style="text-align:center"><input type="checkbox" class="checkbox-custom" ${isChecked ? 'checked' : ''} data-key="${esc(key)}"></td>
+                    <td><span class="type-badge" style="color:${colour}; border:1px solid ${colour}; padding:2px 8px; border-radius:12px; font-size:0.68rem; font-weight:700; white-space:nowrap;">${esc(label)}</span></td>
+                    <td><span class="func-name">${esc(m.n)}</span><span class="sig-text">${esc(m.g)}</span></td>
+                    <td class="desc-text">${esc(m.d)}</td>
+                    <td><button class="play-btn" data-idx="${i}">&#9654;</button></td>
+                </tr>`;
+            }).join('');
+
+            body.addEventListener('click', e => {
+                const btn = e.target.closest('.play-btn');
+                if (btn) runDemo(+btn.dataset.idx);
+            });
+            body.addEventListener('change', e => {
+                if (e.target.classList.contains('checkbox-custom')) {
+                    localStorage.setItem(e.target.dataset.key, e.target.checked);
+                    updateProgress();
+                }
+            });
+            updateProgress();
+            applyFilters();
+        }
+
+        let typing = 0;
+        async function runDemo(i) {
+            const m = funcs[i];
+            const codeBox = document.getElementById('code-box');
+            const outBox = document.getElementById('output-box');
+
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('notebook-body').scrollTop = 0;
+            document.getElementById('header-fn').textContent = m.n;
+            document.getElementById('doc-sig').textContent = m.g;
+            document.getElementById('doc-desc').textContent = m.d;
+
+            const both = m.q + ' ' + (m.s || '');
+            const usesEmp = /\bemployees\b/.test(both);
+            const usesDept = /\bdepartments\b/.test(both);
+            document.getElementById('schema-emp').style.display = usesEmp ? 'block' : 'none';
+            document.getElementById('schema-dept').style.display = usesDept ? 'block' : 'none';
+            document.getElementById('schema-view').style.display = (usesEmp || usesDept) ? 'block' : 'none';
+
+            const setupCell = document.getElementById('setup-cell');
+            if (m.s) {
+                setupCell.style.display = 'block';
+                document.getElementById('setup-box').innerHTML = highlightSQL(m.s);
+            } else {
+                setupCell.style.display = 'none';
+            }
+
+            codeBox.innerHTML = '';
+            outBox.innerHTML = '';
+
+            const run = ++typing;
+            const step = m.q.length > 220 ? 3 : 1;
+            for (let p = 0; p < m.q.length; p += step) {
+                if (run !== typing) return;
+                codeBox.innerHTML = highlightSQL(m.q.slice(0, p + step));
+                await new Promise(r => setTimeout(r, 8));
+            }
+            codeBox.innerHTML = highlightSQL(m.q);
+            await new Promise(r => setTimeout(r, 150));
+            if (run !== typing) return;
+            outBox.innerHTML = renderOutput(m.o) +
+                (m.v ? '<div class="volatile-note">This function is volatile &mdash; the value changes on every call.</div>' : '');
+        }
+
+        function updateProgress() {
+            const checked = document.querySelectorAll('.checkbox-custom:checked').length;
+            const pct = Math.round((checked / funcs.length) * 100);
+            document.getElementById('progress-bar-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = `${checked}/${funcs.length}`;
+        }
+
+        function resetProgress() {
+            if (confirm('Reset all progress?')) {
+                Object.keys(localStorage).filter(k => k.startsWith('pg-v1-')).forEach(k => localStorage.removeItem(k));
+                location.reload();
+            }
+        }
+
+        function closeModal() { typing++; document.getElementById('modal').classList.remove('active'); }
+
+        function applyFilters() {
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+            const cat = document.getElementById('catFilter').value;
+            let shown = 0;
+            document.querySelectorAll('.func-row').forEach(row => {
+                const ok = (cat === 'all' || row.dataset.cat === cat) &&
+                           (q === '' || row.dataset.search.includes(q));
+                row.style.display = ok ? '' : 'none';
+                if (ok) shown++;
+            });
+            document.getElementById('result-count').textContent =
+                `Showing ${shown} of ${funcs.length} functions`;
+            document.getElementById('empty-state').style.display = shown ? 'none' : 'block';
+        }
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('catFilter').addEventListener('change', applyFilters);
+        document.getElementById('modal').addEventListener('click', e => {
+            if (e.target.id === 'modal') closeModal();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        init();
+    </script>
+</body>
+</html>
