@@ -91,6 +91,7 @@ html[data-theme="light"] {
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; overflow: hidden; }
 body {
     font-family: var(--ui);
     font-size: 13px;
@@ -145,7 +146,8 @@ button { font-family: inherit; }
 .title-right { position: absolute; right: 11px; color: var(--fg-mute); font-size: 11px; }
 
 /* ---------------------------------------------------------------- work area */
-.work { display: grid; grid-template-columns: var(--act-w) var(--side-w) minmax(0, 1fr); min-height: 0; }
+.work { display: grid; grid-template-columns: var(--act-w) var(--side-w) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; }
+.work > * { min-height: 0; }
 
 /* activity bar */
 .activity {
@@ -202,7 +204,7 @@ button { font-family: inherit; }
 .side-foot .n button:hover { color: var(--focus); text-decoration: underline; }
 
 /* ---------------------------------------------------------------- editor */
-.editor { display: grid; grid-template-rows: var(--tab-h) var(--crumb-h) minmax(0, 1fr); min-width: 0; background: var(--edit); }
+.editor { display: grid; grid-template-rows: var(--tab-h) var(--crumb-h) minmax(0, 1fr); min-width: 0; min-height: 0; background: var(--edit); }
 .tabs { display: flex; background: var(--tab-off); overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tab {
@@ -388,6 +390,7 @@ table.grid i.nil { color: var(--fg-mute); font-style: italic; }
     :root { --side-w: 210px; --act-w: 44px; }
 }
 @media (max-width: 820px) {
+    html { height: auto; overflow: visible; }
     body { overflow: auto; height: auto; min-height: 100vh; display: block; padding-bottom: var(--status-h); }
     .titlebar { position: sticky; top: 0; z-index: 70; height: var(--title-h); }
     .work { display: block; }
