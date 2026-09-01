@@ -38,18 +38,19 @@ This is the PostgreSQL companion to [SQL-Master](https://github.com/edusatyaki/S
 
 ## Design
 
-Set as a printed technical manual rather than a web dashboard: a warm paper ground, ink-black
-IBM Plex Serif headings, IBM Plex Mono for every function name, signature and result, hairline
-rules instead of cards, numbered sections, and a single navy accent. Syntax colours are chosen
-for print legibility, not to imitate a terminal.
+Styled as the VS Code editor itself, in **Dark+** and **Light+**: activity bar, Explorer
+sidebar, editor tab and breadcrumbs, a line-number gutter down the entry list, and the blue
+status bar. Function names, signatures and results are set in JetBrains Mono and coloured with
+VS Code's own SQL token palette — keywords blue, control flow purple, types teal, function
+names yellow, strings rust, numerals green.
 
 ## Features
 
-- **Numbered contents rail** listing all 21 sections with entry counts, tracking your position
-  as you scroll. Entries are a dense, rule-separated list, not a grid of cards.
+- **Explorer sidebar** listing all 21 sections with entry counts, tracking your position as you
+  scroll and updating the breadcrumb and status bar with it.
 - **Instant search** across name, signature and description. Sections and contents entries fold
   away as you type.
-- **Reading pane** — click any entry for a side panel with the section locator, signature,
+- **Peek pane** — click any entry for a split editor with the section locator, signature,
   description, the sample data the query runs against, the setup SQL where one is needed, the
   query (syntax-highlighted, with a copy button), and the real result with a row count.
 - **Browse without closing** — arrow keys or the pane's prev/next buttons step through the
