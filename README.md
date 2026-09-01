@@ -49,7 +49,8 @@ This is the PostgreSQL companion to [SQL-Master](https://github.com/edusatyaki/S
 - **Browse without closing** — arrow keys or the drawer's prev/next buttons step through the
   current filter, so you can read a whole category in one pass.
 - **Keyboard driven** — `/` or `Cmd/Ctrl+K` to search, `↑` `↓` to move through results, `Enter`
-  to open, `←` `→` to browse, `Esc` to close.
+  to open, `←` `→` to browse, `F` for fullscreen, `Esc` to close.
+- **Fullscreen** from the top bar or the `F` key, for presenting or distraction-free reading.
 - **Light and dark themes**, following your OS by default and remembered per browser.
 - **Progress tracking** — mark functions as learned from the card or the drawer; a progress ring
   keeps the running total. Stored in `localStorage` and survives reloads.
