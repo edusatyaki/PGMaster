@@ -1,469 +1,771 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PostgreSQL | PG Mastery</title>
-    <meta name="description" content="__COUNT__ PostgreSQL functions with real, verified output from PostgreSQL __PGVERSION__.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --text-primary: #c9d1d9;
-            --text-secondary: #8b949e;
-            --accent-orange: #f97316;
-            --accent-blue: #38bdf8;
-            --border-color: #30363d;
-            --code-font: 'Fira Code', monospace;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PG Master &mdash; The PostgreSQL Function Reference</title>
+<meta name="description" content="__COUNT__ PostgreSQL functions, each with a runnable example and the real output captured from PostgreSQL __PGVERSION__.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================ TOKENS ============================ */
+:root {
+    --bg:         #0a0d12;
+    --bg-soft:    #0f141b;
+    --surface:    #131920;
+    --surface-2:  #1a212b;
+    --line:       #222b37;
+    --line-soft:  #1a212b;
+    --txt:        #dbe1ea;
+    --txt-dim:    #8d99a9;
+    --txt-faint:  #5d6878;
+    --accent:     #4dabf7;
+    --accent-dim: #1d4d73;
+    --accent-glow:rgba(77, 171, 247, 0.14);
+    --good:       #4ec98a;
+    --warn:       #e0b341;
+    --code-bg:    #0c1016;
+    --shadow:     0 24px 60px rgba(0, 0, 0, 0.55);
+    --radius:     10px;
+    --ui: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --topbar-h: 60px;
+}
+[data-theme="light"] {
+    --bg:         #f7f8fa;
+    --bg-soft:    #ffffff;
+    --surface:    #ffffff;
+    --surface-2:  #f2f4f7;
+    --line:       #e2e6ec;
+    --line-soft:  #edf0f4;
+    --txt:        #1a2230;
+    --txt-dim:    #5b6675;
+    --txt-faint:  #8a94a3;
+    --accent:     #1c6fb8;
+    --accent-dim: #cfe3f5;
+    --accent-glow:rgba(28, 111, 184, 0.10);
+    --good:       #1a8a55;
+    --warn:       #9a6b00;
+    --code-bg:    #14181f;
+    --shadow:     0 24px 60px rgba(20, 30, 45, 0.16);
+}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    font-family: var(--ui);
+    background: var(--bg);
+    color: var(--txt);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+::selection { background: var(--accent-dim); color: var(--txt); }
 
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            padding-top: 80px;
-            padding-bottom: 100px;
-        }
+/* ============================ TOP BAR ============================ */
+.topbar {
+    position: sticky; top: 0; z-index: 60;
+    height: var(--topbar-h);
+    display: flex; align-items: center; gap: 20px;
+    padding: 0 22px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+.brand-mark {
+    width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+    background: linear-gradient(140deg, var(--accent), #2b6ea8);
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700; color: #fff;
+}
+.brand small { color: var(--txt-faint); font-weight: 400; font-size: 0.78rem; }
 
-        .ambient-light {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: -1;
-            background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
-        }
+.searchwrap { position: relative; flex: 1; max-width: 520px; margin: 0 auto; }
+.searchwrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--txt-faint); pointer-events: none; }
+#q {
+    width: 100%; height: 38px;
+    padding: 0 68px 0 36px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--txt);
+    font-family: var(--ui); font-size: 0.9rem;
+}
+#q::placeholder { color: var(--txt-faint); }
+#q:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.kbd-hint { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); display: flex; gap: 4px; pointer-events: none; }
+kbd {
+    font-family: var(--mono); font-size: 10px; color: var(--txt-faint);
+    border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 4px; padding: 2px 5px; background: var(--surface-2);
+}
+.topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+.icon-btn {
+    width: 34px; height: 34px; display: grid; place-items: center;
+    border: 1px solid var(--line); background: var(--surface); color: var(--txt-dim);
+    border-radius: 8px; cursor: pointer; transition: 0.15s;
+}
+.icon-btn:hover { color: var(--accent); border-color: var(--accent); }
+[data-theme="dark"] .sun { display: block; }
+[data-theme="dark"] .moon { display: none; }
+[data-theme="light"] .sun { display: none; }
+[data-theme="light"] .moon { display: block; }
 
-        .progress-container {
-            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
-            background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .progress-info { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
-        .progress-bar-wrapper { flex: 1; min-width: 150px; margin: 0 10px; background: #21262d; height: 6px; border-radius: 3px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.4s ease; border-radius: 2px; }
+/* ============================ SHELL ============================ */
+.shell {
+    display: grid;
+    grid-template-columns: 236px minmax(0, 1fr);
+    gap: 34px;
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 0 22px;
+    align-items: start;
+}
+.shell > * { min-width: 0; }
 
-        .reset-btn {
-            background: transparent; border: 1px solid #da3633; color: #da3633;
-            padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
-        }
-        .reset-btn:hover { background: #da3633; color: #fff; }
+/* ============================ SIDEBAR ============================ */
+.sidebar { position: sticky; top: var(--topbar-h); max-height: calc(100vh - var(--topbar-h)); overflow-y: auto; padding: 22px 0 40px; scrollbar-width: thin; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
-        header { padding: 3rem 2rem 1rem; text-align: center; }
-        h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 700; color: #f0f6fc; margin-bottom: 0.5rem; }
-        .tagline { color: var(--text-secondary); }
-        .verified-badge {
-            display: inline-flex; align-items: center; gap: 8px; margin-top: 1rem;
-            border: 1px solid #238636; color: #3fb950; background: rgba(35, 134, 54, 0.1);
-            border-radius: 20px; padding: 5px 16px; font-size: 0.8rem; font-weight: 600;
-        }
+.progress-card { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; }
+.progress-top { display: flex; align-items: center; gap: 12px; }
+.ring { width: 46px; height: 46px; flex-shrink: 0; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+.ring .track { stroke: var(--line); }
+.ring .bar { stroke: var(--accent); transition: stroke-dashoffset 0.45s ease; }
+.progress-num { font-size: 1.05rem; font-weight: 600; font-family: var(--mono); }
+.progress-lbl { font-size: 0.72rem; color: var(--txt-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.reset-link { display: block; margin-top: 10px; font-size: 0.74rem; color: var(--txt-faint); background: none; border: none; cursor: pointer; font-family: var(--ui); padding: 0; }
+.reset-link:hover { color: #e5534b; }
 
-        .controls-wrapper { max-width: 1200px; margin: 1rem auto; display: flex; gap: 1rem; padding: 0 2rem; flex-wrap: wrap; }
-        .search-input, .filter-select {
-            flex: 1; padding: 0.8rem 1rem; border-radius: 6px; border: 1px solid var(--border-color);
-            background: #0d1117; color: #fff; font-family: var(--code-font); font-size: 0.9rem; min-width: 200px;
-        }
-        .search-input:focus, .filter-select:focus { outline: none; border-color: var(--accent-blue); }
+.nav-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--txt-faint); padding: 0 8px 8px; font-weight: 600; }
+.nav a {
+    display: flex; align-items: center; gap: 9px;
+    padding: 6px 9px; border-radius: 7px;
+    color: var(--txt-dim); font-size: 0.82rem;
+    border-left: 2px solid transparent;
+    transition: 0.12s;
+}
+.nav a:hover { background: var(--surface); color: var(--txt); text-decoration: none; }
+.nav a.active { background: var(--surface); color: var(--txt); border-left-color: var(--dot); font-weight: 500; }
+.nav .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dot); flex-shrink: 0; }
+.nav .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav .ct { font-family: var(--mono); font-size: 0.7rem; color: var(--txt-faint); }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-        .result-count { color: var(--text-secondary); font-size: 0.8rem; margin: 0 0 0.6rem 2px; }
+/* ============================ HERO ============================ */
+.hero { padding: 46px 0 30px; border-bottom: 1px solid var(--line-soft); }
+.hero h1 { font-size: clamp(2rem, 4vw, 2.7rem); font-weight: 700; letter-spacing: -0.03em; margin-bottom: 10px; }
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--txt-dim); font-size: 1.02rem; max-width: 60ch; }
+.stat-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.stat {
+    display: flex; align-items: baseline; gap: 7px;
+    border: 1px solid var(--line); background: var(--surface);
+    border-radius: 8px; padding: 7px 13px;
+}
+.stat b { font-family: var(--mono); font-size: 0.95rem; font-weight: 600; }
+.stat span { font-size: 0.78rem; color: var(--txt-faint); }
+.stat.verified { border-color: color-mix(in srgb, var(--good) 45%, transparent); color: var(--good); }
+.stat.verified b { color: var(--good); }
+.stat.verified span { color: color-mix(in srgb, var(--good) 78%, var(--txt-dim)); }
 
-        .table-wrapper { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* ============================ SECTIONS ============================ */
+.meta-row { padding: 20px 0 4px; font-size: 0.8rem; color: var(--txt-faint); font-family: var(--mono); }
+.sec { padding-top: 10px; scroll-margin-top: calc(var(--topbar-h) + 8px); }
+.sec-head {
+    position: sticky; top: var(--topbar-h); z-index: 20;
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 0 12px;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+}
+.sec-head h2 { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; }
+.sec-head .bar { width: 3px; height: 17px; border-radius: 2px; background: var(--dot); }
+.sec-head .ct { font-family: var(--mono); font-size: 0.74rem; color: var(--txt-faint); background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 1px 9px; }
 
-        table { width: 100%; border-collapse: collapse; min-width: 760px; }
-        th { text-align: left; padding: 1rem; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); background: #161b22; }
-        td { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.95rem; }
-        #master-body tr:hover { background: #21262d; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; padding-bottom: 12px; }
 
-        .func-name { font-family: var(--code-font); color: var(--accent-blue); font-weight: 500; font-size: 0.95rem; white-space: nowrap; }
-        .sig-text { font-family: var(--code-font); color: #6e7681; font-size: 0.75rem; display: block; margin-top: 3px; white-space: nowrap; }
-        .desc-text { font-size: 0.88rem; color: #8b949e; line-height: 1.5; }
-        .empty-state { padding: 3rem; text-align: center; color: var(--text-secondary); }
+.card {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 13px 14px 13px 15px;
+    cursor: pointer;
+    transition: border-color 0.14s, transform 0.14s, box-shadow 0.14s;
+    overflow: hidden;
+}
+.card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--dot); opacity: 0.45; }
+.card:hover, .card.kb {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+.card:hover::before, .card.kb::before { opacity: 1; }
+.card-name { font-family: var(--mono); font-size: 0.9rem; font-weight: 600; color: var(--accent); padding-right: 26px; word-break: break-word; }
+.card-sig { font-family: var(--mono); font-size: 0.7rem; color: var(--txt-faint); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-desc {
+    font-size: 0.8rem; color: var(--txt-dim); margin-top: 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tick {
+    position: absolute; top: 11px; right: 11px;
+    width: 17px; height: 17px; border-radius: 5px;
+    border: 1px solid var(--line); background: var(--bg-soft);
+    display: grid; place-items: center; cursor: pointer; transition: 0.14s; z-index: 2;
+}
+.tick svg { opacity: 0; color: #fff; }
+.tick:hover { border-color: var(--good); }
+.card.done .tick { background: var(--good); border-color: var(--good); }
+.card.done .tick svg { opacity: 1; }
+.card.done .card-name { color: var(--txt-dim); }
+.hidden { display: none !important; }
 
-        /* Modal / SQL Editor */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 2000; padding: 20px; }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+.empty { padding: 70px 20px; text-align: center; color: var(--txt-faint); }
+.empty code { font-family: var(--mono); color: var(--accent); }
 
-        .notebook-window {
-            width: 100%; max-width: 900px; background: #fff; border-radius: 8px;
-            display: flex; flex-direction: column; height: 85vh; color: #000;
-            overflow: hidden; box-shadow: 0 50px 100px rgba(0,0,0,0.5);
-        }
+footer.page { border-top: 1px solid var(--line-soft); margin-top: 30px; padding: 26px 0 50px; color: var(--txt-faint); font-size: 0.84rem; display: flex; flex-wrap: wrap; gap: 8px 18px; }
 
-        .notebook-header { background: #1e1e1e; padding: 8px 20px; border-bottom: 1px solid #333; font-size: 0.85rem; color: #d4d4d4; display: flex; justify-content: space-between; align-items: center; }
-        .notebook-header .fn { font-family: var(--code-font); color: #38bdf8; }
-        .notebook-body { flex: 1; overflow-y: auto; padding: 30px; font-family: var(--code-font); font-size: 14px; background: #f5f5f5; }
+/* ============================ DRAWER ============================ */
+.scrim { position: fixed; inset: 0; background: rgba(4, 7, 11, 0.6); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 90; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 100;
+    width: min(760px, 100vw);
+    background: var(--bg-soft);
+    border-left: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+    transform: translateX(102%);
+    transition: transform 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.drawer.on { transform: none; }
 
-        .doc-block { margin-bottom: 22px; font-family: sans-serif; }
-        .doc-sig { font-family: var(--code-font); font-size: 13px; background: #eef1f4; border: 1px solid #dde1e6; border-radius: 4px; padding: 8px 12px; color: #24292f; display: inline-block; }
-        .doc-desc { font-size: 13px; color: #444; margin-top: 10px; line-height: 1.6; }
+.dr-head { display: flex; align-items: center; gap: 10px; padding: 13px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.dr-cat { display: inline-flex; align-items: center; gap: 7px; font-size: 0.74rem; color: var(--txt-dim); border: 1px solid var(--line); border-radius: 20px; padding: 3px 11px; white-space: nowrap; }
+.dr-cat i { width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+.dr-nav { margin-left: auto; display: flex; gap: 6px; }
+.dr-nav button, .dr-close { width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--txt-dim); cursor: pointer; display: grid; place-items: center; transition: 0.14s; }
+.dr-nav button:hover, .dr-close:hover { color: var(--accent); border-color: var(--accent); }
+.dr-nav button:disabled { opacity: 0.35; cursor: default; }
+.dr-nav button:disabled:hover { color: var(--txt-dim); border-color: var(--line); }
 
-        .schema-container { margin-bottom: 25px; padding: 15px; background: #e8eaed; border-radius: 6px; border: 1px solid #ccc; font-family: sans-serif; }
-        .schema-title { font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; margin-bottom: 10px; }
-        .schema-tables { display: flex; gap: 20px; flex-wrap: wrap; }
-        .schema-table { flex: 1; min-width: 200px; background: #fff; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
-        .schema-table-head { background: #d0d7de; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #c0c7ce; color: #24292f; }
-        .schema-table-body { overflow-x: auto; background: #fff; }
+.dr-body { flex: 1; overflow-y: auto; padding: 24px 26px 60px; }
+.dr-body::-webkit-scrollbar { width: 9px; }
+.dr-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 5px; }
+.dr-title { font-family: var(--mono); font-size: 1.42rem; font-weight: 600; letter-spacing: -0.02em; word-break: break-word; }
+.dr-sig { font-family: var(--mono); font-size: 0.82rem; color: var(--txt-dim); background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 9px 12px; margin-top: 12px; overflow-x: auto; white-space: nowrap; }
+.dr-desc { color: var(--txt-dim); margin-top: 14px; font-size: 0.95rem; line-height: 1.65; }
 
-        .context-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: sans-serif; min-width: unset; }
-        .context-table th { background: #f6f8fa; color: #57606a; font-weight: 600; text-align: left; padding: 6px 10px; border-bottom: 1px solid #d0d7de; font-size: 11px; text-transform: none; letter-spacing: normal; border-right: 1px solid #e1e4e8; }
-        .context-table td { padding: 6px 10px; border-bottom: 1px solid #e1e4e8; border-right: 1px solid #e1e4e8; color: #24292f; }
-        .context-table tr:last-child td { border-bottom: none; }
-        .context-table th:last-child, .context-table td:last-child { border-right: none; }
+.blk { margin-top: 26px; }
+.blk-lbl { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--txt-faint); font-weight: 600; margin-bottom: 8px; }
+.blk-lbl .line { flex: 1; height: 1px; background: var(--line-soft); }
+.copy-btn { border: 1px solid var(--line); background: var(--surface); color: var(--txt-faint); border-radius: 6px; font-size: 0.66rem; padding: 3px 9px; cursor: pointer; font-family: var(--ui); letter-spacing: 0.04em; text-transform: uppercase; }
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-        .cell { margin-bottom: 25px; display: block; }
-        .cell-input { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
-        .prompt { color: #888; user-select: none; font-size: 12px; font-family: sans-serif; font-weight: bold; }
-        .input-area { flex: 1; background: #1e1e1e; color: #d4d4d4; border-radius: 4px; padding: 15px; white-space: pre-wrap; line-height: 1.5; font-size: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); overflow-x: auto; }
-        .input-area.active { border-left: 4px solid var(--accent-blue); }
-        .input-area.setup { border-left: 4px solid #8b949e; font-size: 12.5px; opacity: 0.92; }
+.code {
+    font-family: var(--mono); font-size: 0.83rem; line-height: 1.62;
+    background: var(--code-bg); color: #cdd6e4;
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; white-space: pre-wrap; overflow-x: auto;
+}
+.code.setup { font-size: 0.76rem; opacity: 0.86; }
+.code.query { border-left: 2px solid var(--accent); }
 
-        .output-area { margin-top: 10px; font-family: sans-serif; font-size: 13px; color: #333; overflow-x: auto; background: #fff; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
-        .sql-msg { color: #2e7d32; font-family: var(--code-font); font-size: 13px; white-space: pre-wrap; }
-        .sql-note { color: #8a6d3b; font-family: sans-serif; font-size: 12.5px; line-height: 1.6; }
-        .volatile-note { color: #6e7681; font-family: sans-serif; font-size: 11.5px; margin-top: 8px; }
+.ctx { display: flex; flex-wrap: wrap; gap: 14px; }
+.ctx-tbl { flex: 1; min-width: 250px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.ctx-tbl-h { background: var(--surface-2); padding: 6px 11px; font-family: var(--mono); font-size: 0.74rem; color: var(--txt-dim); border-bottom: 1px solid var(--line); }
+.scroll-x { overflow-x: auto; }
 
-        .dataframe { width: 100%; border-collapse: collapse; font-size: 13px; min-width: unset; }
-        .dataframe th { background: #f5f5f5; color: #333; font-weight: 600; text-align: left; padding: 8px; border: 1px solid #ddd; border-bottom: 2px solid #ccc; white-space: nowrap; text-transform: none; letter-spacing: normal; font-family: var(--code-font); font-size: 12px; }
-        .dataframe td { padding: 8px; border: 1px solid #ddd; color: #333; font-family: var(--code-font); font-size: 12.5px; vertical-align: top; }
-        .dataframe td.wrap { white-space: pre-wrap; word-break: break-word; }
-        .dataframe tr:nth-child(even) { background: #fafafa; }
-        .dataframe tr:hover { background: #f0f7ff; }
+table.data { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.76rem; }
+table.data th { text-align: left; padding: 7px 11px; background: var(--surface-2); color: var(--txt-dim); font-weight: 600; white-space: nowrap; border-bottom: 1px solid var(--line); }
+table.data td { padding: 7px 11px; border-top: 1px solid var(--line-soft); color: var(--txt); vertical-align: top; white-space: nowrap; }
+table.data td.wrap { white-space: pre-wrap; word-break: break-word; min-width: 260px; }
+table.data tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+table.data i.null { color: var(--txt-faint); font-style: italic; }
 
-        .sql-kw { color: #569cd6; font-weight: bold; }
-        .sql-str { color: #ce9178; }
-        .sql-num { color: #b5cea8; }
-        .sql-cmt { color: #6a9955; font-style: italic; }
+.result-wrap { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.rowcount { padding: 6px 11px; font-family: var(--mono); font-size: 0.7rem; color: var(--txt-faint); border-top: 1px solid var(--line-soft); }
+.msg { font-family: var(--mono); font-size: 0.8rem; color: var(--good); padding: 12px 14px; white-space: pre-wrap; }
+.note { font-size: 0.83rem; color: var(--txt-dim); padding: 12px 14px; line-height: 1.6; border-left: 2px solid var(--warn); }
+.note b { color: var(--warn); }
+.tag-volatile { display: inline-block; margin-top: 10px; font-size: 0.72rem; color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); border-radius: 20px; padding: 2px 10px; }
+.exec { padding: 14px; font-family: var(--mono); font-size: 0.78rem; color: var(--txt-faint); }
+.exec::after { content: '▋'; animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
 
-        .play-btn { background: transparent; border: 1px solid var(--accent-blue); color: var(--accent-blue); width: 32px; height: 32px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .play-btn:hover { background: var(--accent-blue); color: #000; }
-        .checkbox-custom { width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent-blue); flex-shrink: 0; }
+.learn-row { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--line-soft); display: flex; align-items: center; gap: 12px; }
+.learn-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--txt-dim); border-radius: 8px; padding: 8px 15px; cursor: pointer; font-family: var(--ui); font-size: 0.85rem; transition: 0.14s; }
+.learn-btn:hover { border-color: var(--good); color: var(--good); }
+.learn-btn.on { background: color-mix(in srgb, var(--good) 15%, transparent); border-color: var(--good); color: var(--good); }
+.dr-hint { margin-left: auto; font-size: 0.74rem; color: var(--txt-faint); }
 
-        .fixed-footer {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px);
-            border-top: 1px solid var(--border-color);
-            padding: 1rem; text-align: center; font-size: 0.9rem; z-index: 1000;
-        }
-        .fixed-footer a { color: var(--accent-blue); text-decoration: none; font-weight: 600; }
+/* SQL syntax colours */
+.k { color: #6cb6ff; font-weight: 500; }
+.s { color: #e8a87c; }
+.n { color: #a5d6a7; }
+.c { color: #6f7d8c; font-style: italic; }
+[data-theme="light"] .k { color: #79b8ff; }
 
-        @media (max-width: 768px) {
-            body { padding-top: 120px; }
-            header { padding: 1.5rem 1rem 0.5rem; }
-            .controls-wrapper { padding: 0 1rem; flex-direction: column; }
-            .search-input, .filter-select { width: 100%; min-width: unset; }
-            .container { padding: 0 1rem; }
-            .modal-overlay { padding: 10px; }
-            .notebook-window { height: 95vh; }
-            .notebook-body { padding: 15px; }
-            .schema-tables { flex-direction: column; gap: 10px; }
-        }
-    </style>
+/* ============================ RESPONSIVE ============================ */
+@media (max-width: 1080px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .sidebar {
+        position: sticky; top: var(--topbar-h); z-index: 30;
+        max-height: none; overflow: visible;
+        padding: 10px 0; margin: 0 -22px; background: var(--bg);
+        border-bottom: 1px solid var(--line);
+    }
+    .progress-card { display: none; }
+    .nav-title { display: none; }
+    .nav { display: flex; gap: 6px; overflow-x: auto; padding: 0 22px; scrollbar-width: none; }
+    .nav::-webkit-scrollbar { display: none; }
+    .nav a { border: 1px solid var(--line); border-left-width: 1px; border-radius: 20px; padding: 5px 12px; white-space: nowrap; font-size: 0.78rem; }
+    .nav a.active { border-color: var(--dot); border-left-width: 1px; }
+    .nav .ct { display: none; }
+    .sec-head { top: calc(var(--topbar-h) + 47px); }
+    .hero { padding: 32px 0 24px; }
+}
+@media (max-width: 720px) {
+    .topbar { gap: 12px; padding: 0 14px; }
+    .brand small, .kbd-hint { display: none; }
+    .shell { padding: 0 14px; }
+    .sidebar { margin: 0 -14px; }
+    .nav { padding: 0 14px; }
+    .grid { grid-template-columns: 1fr; }
+    .drawer { width: 100vw; border-left: none; }
+    .dr-body { padding: 18px 16px 50px; }
+}
+@media (max-width: 560px) {
+    .brand span:last-child { display: none; }
+    .topbar { gap: 10px; }
+    .hero h1 { font-size: 1.85rem; }
+}
+</style>
 </head>
 <body>
 
-    <div class="ambient-light"></div>
-
-    <div class="progress-container">
-        <span class="progress-info">PG Mastery</span>
-        <div class="progress-bar-wrapper">
-            <div id="progress-bar-fill" class="progress-bar-fill"></div>
-        </div>
-        <span id="progress-text" class="progress-info">0/__COUNT__</span>
-        <button class="reset-btn" onclick="resetProgress()">Reset</button>
+<div class="topbar">
+    <div class="brand">
+        <span class="brand-mark">pg</span>
+        <span>PG Master <small>&nbsp;/&nbsp;__COUNT__ functions</small></span>
     </div>
-
-    <header>
-        <h1>PG Master</h1>
-        <p class="tagline">Every PostgreSQL function. Exact syntax. Real, executed output.</p>
-        <div class="verified-badge">&#10003; __COUNT__ functions executed on PostgreSQL __PGVERSION__</div>
-    </header>
-
-    <div class="controls-wrapper">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search function, signature or description...">
-        <select id="catFilter" class="filter-select">
-            <option value="all">All Categories</option>
-        </select>
+    <div class="searchwrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="text" placeholder="Search functions, signatures, descriptions&hellip;" autocomplete="off" spellcheck="false">
+        <span class="kbd-hint"><kbd>/</kbd></span>
     </div>
-
-    <div class="container">
-        <div class="result-count" id="result-count"></div>
-        <div class="table-wrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th width="50">&#10003;</th>
-                        <th width="150">Category</th>
-                        <th width="230">Function</th>
-                        <th>Explanation</th>
-                        <th width="70">Demo</th>
-                    </tr>
-                </thead>
-                <tbody id="master-body"></tbody>
-            </table>
-            <div class="empty-state" id="empty-state" style="display:none">No function matches that search.</div>
-        </div>
+    <div class="topbar-right">
+        <button class="icon-btn" id="theme-btn" title="Toggle theme" aria-label="Toggle theme">
+            <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.8 6.8 0 0 0 10.5 10.5Z"/></svg>
+        </button>
+        <a class="icon-btn" href="https://github.com/edusatyaki/PGMaster" target="_blank" rel="noopener" title="Source on GitHub" aria-label="Source on GitHub">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38l-.01-1.34c-2.23.48-2.7-1.07-2.7-1.07-.36-.93-.89-1.18-.89-1.18-.73-.5.05-.49.05-.49.8.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+        </a>
     </div>
+</div>
 
-    <div class="modal-overlay" id="modal">
-        <div class="notebook-window">
-            <div class="notebook-header">
-                <span><span style="color:#38bdf8">&#9654;</span> psql &mdash; <span class="fn" id="header-fn"></span></span>
-                <button onclick="closeModal()" style="background:none; border:none; cursor:pointer; font-size:1.2rem; color:#fff;">&times;</button>
-            </div>
-            <div class="notebook-body" id="notebook-body">
-
-                <div class="doc-block">
-                    <div class="doc-sig" id="doc-sig"></div>
-                    <div class="doc-desc" id="doc-desc"></div>
-                </div>
-
-                <div class="schema-container" id="schema-view" style="display:none">
-                    <div class="schema-title">Database Data Context:</div>
-                    <div class="schema-tables">
-                        <div class="schema-table" id="schema-emp" style="display:none;">
-                            <div class="schema-table-head">&#128199; employees</div>
-                            <div class="schema-table-body">
-                                <table class="context-table">
-                                    <thead>
-                                        <tr><th>id</th><th>name</th><th>dept_id</th><th>salary</th><th>hire_date</th><th>email</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td>1</td><td>Alice</td><td>101</td><td>70000</td><td>2019-03-15</td><td>alice@corp.io</td></tr>
-                                        <tr><td>2</td><td>Bob</td><td>102</td><td>85000</td><td>2020-07-01</td><td>bob@corp.io</td></tr>
-                                        <tr><td>3</td><td>Charlie</td><td>101</td><td>60000</td><td>2021-11-23</td><td>charlie@corp.io</td></tr>
-                                        <tr><td>4</td><td>Diana</td><td>102</td><td>92000</td><td>2018-01-09</td><td>diana@corp.io</td></tr>
-                                        <tr><td>5</td><td>Evan</td><td><i>NULL</i></td><td>55000</td><td>2022-05-30</td><td><i>NULL</i></td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="schema-table" id="schema-dept" style="display:none;">
-                            <div class="schema-table-head">&#127970; departments</div>
-                            <div class="schema-table-body">
-                                <table class="context-table">
-                                    <thead>
-                                        <tr><th>dept_id</th><th>dept_name</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td>101</td><td>IT</td></tr>
-                                        <tr><td>102</td><td>Sales</td></tr>
-                                        <tr><td>103</td><td>HR</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cell" id="setup-cell" style="display:none">
-                    <div class="cell-input">
-                        <div class="prompt">Setup:</div>
-                        <div class="input-area setup" id="setup-box"></div>
-                    </div>
-                </div>
-
-                <div class="cell">
-                    <div class="cell-input">
-                        <div class="prompt">Query:</div>
-                        <div class="input-area active" id="code-box"></div>
-                    </div>
-                    <div class="prompt" style="margin-top: 15px;">Result:</div>
-                    <div class="output-area" id="output-box"></div>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="progress-card">
+            <div class="progress-top">
+                <svg class="ring" viewBox="0 0 46 46">
+                    <circle class="track" cx="23" cy="23" r="19"/>
+                    <circle class="bar" id="ring-bar" cx="23" cy="23" r="19" stroke-dasharray="119.4" stroke-dashoffset="119.4"/>
+                </svg>
+                <div>
+                    <div class="progress-num" id="prog-num">0 / __COUNT__</div>
+                    <div class="progress-lbl">Learned</div>
                 </div>
             </div>
+            <button class="reset-link" id="reset-btn">Reset progress</button>
         </div>
+        <div class="nav-title">Categories</div>
+        <nav class="nav" id="nav"></nav>
+    </aside>
+
+    <main>
+        <section class="hero">
+            <h1>Every PostgreSQL <span>function</span>.</h1>
+            <p>A complete reference of __COUNT__ functions, operators and constructs &mdash; each with a runnable
+               example and the <em>real</em> result, captured by executing it against a live server.</p>
+            <div class="stat-row">
+                <div class="stat"><b>__COUNT__</b><span>functions</span></div>
+                <div class="stat"><b id="cat-count">21</b><span>categories</span></div>
+                <div class="stat verified">
+                    <b>&#10003;</b><span>every output executed on PostgreSQL __PGVERSION__</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="meta-row" id="meta"></div>
+        <div id="sections"></div>
+        <div class="empty hidden" id="empty">
+            No function matches <code id="empty-q"></code>.
+        </div>
+
+        <footer class="page">
+            <span>Ideation &amp; development <a href="https://github.com/edusatyaki" target="_blank" rel="noopener">Satyaki Das</a></span>
+            <span>PG Innovation v_02.0.0</span>
+            <span>Companion to <a href="https://github.com/edusatyaki/SQL-Master" target="_blank" rel="noopener">SQL Master</a></span>
+        </footer>
+    </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Function detail">
+    <div class="dr-head">
+        <span class="dr-cat" id="dr-cat"><i></i><span></span></span>
+        <div class="dr-nav">
+            <button id="prev-btn" title="Previous (←)" aria-label="Previous function">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button id="next-btn" title="Next (→)" aria-label="Next function">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+        <button class="dr-close" id="close-btn" title="Close (Esc)" aria-label="Close">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
     </div>
+    <div class="dr-body" id="dr-body"></div>
+</aside>
 
-    <footer class="fixed-footer">
-        Ideation &amp; development <a href="https://github.com/edusatyaki" target="_blank">Satyaki Das</a> | PG Innovation v_01.0.0
-    </footer>
+<script>
+const DATA = __PAYLOAD__;
+const NULLTOK = "⟪NULL⟫";
+const FN = DATA.funcs;
+const CAT = {};
+DATA.cats.forEach(c => CAT[c.id] = c);
 
-    <script>
-        const DATA = __PAYLOAD__;
-        const NULLTOK = "⟪NULL⟫";
-        const CATCOLOR = {}, CATLABEL = {};
-        DATA.cats.forEach(c => { CATCOLOR[c.id] = c.color; CATLABEL[c.id] = c.label; });
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const shortLabel = id => (CAT[id] ? CAT[id].label : id).replace(/^\d+\.\s*/, '');
+const keyOf = f => 'pg-v1-' + f.c + '-' + f.n;
 
-        function esc(s) {
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
+/* ---------------------------------------------------- theme */
+const savedTheme = localStorage.getItem('pg-theme');
+document.documentElement.dataset.theme = savedTheme
+    || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+$('#theme-btn').addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem('pg-theme', next);
+});
 
-        // HTML TABLE GENERATOR FOR REAL SQL RESULTS
-        function createSQLTable(headers, rows) {
-            const hHtml = headers.map(h => `<th>${esc(h)}</th>`).join('');
-            const rHtml = rows.map(r => {
-                const dHtml = r.map(d => {
-                    if (d === NULLTOK) return '<td><i style="color:#aaa">NULL</i></td>';
-                    if (d === '') return '<td></td>';
-                    const cls = (d.length > 60 || d.indexOf('\n') >= 0) ? ' class="wrap"' : '';
-                    return `<td${cls}>${esc(d)}</td>`;
-                }).join('');
-                return `<tr>${dHtml}</tr>`;
-            }).join('');
-            return `<table class="dataframe"><thead><tr>${hHtml}</tr></thead><tbody>${rHtml}</tbody></table>`;
-        }
+/* ---------------------------------------------------- syntax highlighting */
+const KEYWORDS = ['SELECT','FROM','WHERE','GROUP BY','HAVING','ORDER BY','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE','CREATE TABLE','CREATE FUNCTION','CREATE PROCEDURE','CREATE TRIGGER','CREATE INDEX','CREATE VIEW','CREATE TYPE','CREATE SEQUENCE','ALTER TABLE','DROP TABLE','TRUNCATE','JOIN','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL OUTER JOIN','LATERAL','ON','AS','DISTINCT','BETWEEN','AND','OR','NOT','IN','LIKE','ILIKE','SIMILAR TO','IS NULL','IS NOT NULL','IS DISTINCT FROM','IS NOT DISTINCT FROM','UNION','EXCEPT','INTERSECT','EXISTS','CASE','WHEN','THEN','ELSE','END','PRIMARY KEY','FOREIGN KEY','REFERENCES','DEFAULT','WITH','WITHIN GROUP','FILTER','OVER','PARTITION BY','ROWS BETWEEN','RANGE','GROUPS','UNBOUNDED PRECEDING','CURRENT ROW','UNBOUNDED FOLLOWING','WINDOW','ORDINALITY','ROWS FROM','RETURNING','ON CONFLICT','DO UPDATE','EXCLUDED','GENERATED ALWAYS AS IDENTITY','LANGUAGE','RETURNS','RETURN','BEGIN','DECLARE','IF','ELSIF','CALL','EXECUTE FUNCTION','FOR EACH ROW','FOR EACH STATEMENT','AFTER','BEFORE','EXPLAIN','ANALYZE','VACUUM','GRANT','REVOKE','COMMIT','ROLLBACK','CAST','ASC','DESC','NULLS LAST','NULLS FIRST','VARIADIC','ROLLUP','CUBE','GROUPING SETS','PASSING','COLUMNS','PLACING','FOR','ARRAY','ROW','TRUE','FALSE','NULL','INTERVAL','TIMESTAMP','TIMESTAMPTZ','DATE','TIME','NUMERIC','INTEGER','BIGINT','TEXT','BOOLEAN','SERIAL','AT TIME ZONE','OVERLAPS','ANY','ALL','SOME','IMMUTABLE','STABLE'];
+const KW_RE = new RegExp('\\b(' + KEYWORDS.slice().sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/ /g, '\\s+')).join('|') + ')\\b', 'gi');
 
-        function renderOutput(o) {
-            if (o.x) return `<div class="sql-note"><b>Reference output.</b> ${esc(o.m)}</div>`;
-            if (o.m !== undefined) return `<span class="sql-msg">${esc(o.m)}</span>`;
-            let html = '';
-            if (o.p) html += o.p.map(l => `<div class="sql-msg">${esc(l)}</div>`).join('') + '<div style="height:8px"></div>';
-            html += createSQLTable(o.h, o.r);
-            html += `<div class="volatile-note">${o.r.length} row${o.r.length === 1 ? '' : 's'}</div>`;
-            return html;
-        }
+function hl(str) {
+    let out = esc(str);
+    const stash = [];
+    const keep = h => { stash.push(h); return 'QQ' + (stash.length - 1) + 'QQ'; };
+    out = out.replace(/--[^\n]*/g, m => keep('<span class="c">' + m + '</span>'));
+    out = out.replace(/\$\$/g, m => keep('<span class="s">' + m + '</span>'));
+    out = out.replace(/'(?:[^']|'')*'/g, m => keep('<span class="s">' + m + '</span>'));
+    out = out.replace(KW_RE, m => '<span class="k">' + m + '</span>');
+    out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="n">$1</span>');
+    return out.replace(/QQ(\d+)QQ/g, (_, i) => stash[+i]);
+}
 
-        // SYNTAX HIGHLIGHTER
-        const KEYWORDS = ['SELECT','FROM','WHERE','GROUP BY','HAVING','ORDER BY','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE','CREATE TABLE','CREATE FUNCTION','CREATE PROCEDURE','CREATE TRIGGER','CREATE INDEX','CREATE VIEW','CREATE TYPE','CREATE SEQUENCE','ALTER TABLE','DROP TABLE','TRUNCATE','JOIN','INNER JOIN','LEFT JOIN','RIGHT JOIN','FULL OUTER JOIN','LATERAL','ON','AS','DISTINCT','BETWEEN','AND','OR','NOT','IN','LIKE','ILIKE','SIMILAR TO','IS NULL','IS NOT NULL','IS DISTINCT FROM','IS NOT DISTINCT FROM','UNION','EXCEPT','INTERSECT','EXISTS','CASE','WHEN','THEN','ELSE','END','PRIMARY KEY','FOREIGN KEY','REFERENCES','DEFAULT','WITH','WITHIN GROUP','FILTER','OVER','PARTITION BY','ROWS BETWEEN','RANGE','GROUPS','UNBOUNDED PRECEDING','CURRENT ROW','UNBOUNDED FOLLOWING','WINDOW','ORDINALITY','ROWS FROM','RETURNING','ON CONFLICT','DO UPDATE','EXCLUDED','GENERATED ALWAYS AS IDENTITY','LANGUAGE','RETURNS','RETURN','BEGIN','DECLARE','IF','ELSIF','CALL','EXECUTE FUNCTION','FOR EACH ROW','FOR EACH STATEMENT','AFTER','BEFORE','EXPLAIN','ANALYZE','VACUUM','GRANT','REVOKE','COMMIT','ROLLBACK','CAST','ASC','DESC','NULLS LAST','NULLS FIRST','VARIADIC','ROLLUP','CUBE','GROUPING SETS','PASSING','COLUMNS','PLACING','FOR','ARRAY','ROW','TRUE','FALSE','NULL','INTERVAL','TIMESTAMP','TIMESTAMPTZ','DATE','TIME','NUMERIC','INTEGER','BIGINT','TEXT','BOOLEAN','SERIAL','AT TIME ZONE','OVERLAPS','ANY','ALL','SOME'];
-        const KW_RE = new RegExp('\\b(' + KEYWORDS.slice().sort((a, b) => b.length - a.length)
-            .map(k => k.replace(/ /g, '\\s+')).join('|') + ')\\b', 'gi');
+/* ---------------------------------------------------- result rendering */
+function dataTable(headers, rows) {
+    const h = headers.map(x => '<th>' + esc(x) + '</th>').join('');
+    const r = rows.map(row => '<tr>' + row.map(d => {
+        if (d === NULLTOK) return '<td><i class="null">NULL</i></td>';
+        if (d === '') return '<td></td>';
+        const cls = (d.length > 55 || d.indexOf('\n') >= 0) ? ' class="wrap"' : '';
+        return '<td' + cls + '>' + esc(d) + '</td>';
+    }).join('') + '</tr>').join('');
+    return '<div class="scroll-x"><table class="data"><thead><tr>' + h + '</tr></thead><tbody>' + r + '</tbody></table></div>';
+}
 
-        function highlightSQL(str) {
-            let out = esc(str);
-            const stash = [];
-            const keep = h => { stash.push(h); return 'QQ' + (stash.length - 1) + 'QQ'; };
-            out = out.replace(/--[^\n]*/g, m => keep(`<span class="sql-cmt">${m}</span>`));
-            out = out.replace(/\$\$[\s\S]*?\$\$/g, m => keep(`<span class="sql-str">${m}</span>`));
-            out = out.replace(/'(?:[^']|'')*'/g, m => keep(`<span class="sql-str">${m}</span>`));
-            out = out.replace(KW_RE, m => `<span class="sql-kw">${m}</span>`);
-            out = out.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="sql-num">$1</span>');
-            return out.replace(/QQ(\d+)QQ/g, (_, i) => stash[+i]);
-        }
+function renderResult(o) {
+    if (o.x) return '<div class="result-wrap"><div class="note"><b>Reference output &mdash; not executed.</b> ' + esc(o.m) + '</div></div>';
+    if (o.m !== undefined) return '<div class="result-wrap"><div class="msg">' + esc(o.m) + '</div></div>';
+    let html = '<div class="result-wrap">';
+    if (o.p) html += o.p.map(l => '<div class="msg">' + esc(l) + '</div>').join('');
+    html += dataTable(o.h, o.r);
+    html += '<div class="rowcount">(' + o.r.length + ' row' + (o.r.length === 1 ? '' : 's') + ')</div></div>';
+    return html;
+}
 
-        const funcs = DATA.funcs;
-        document.getElementById('progress-text').textContent = `0/${funcs.length}`;
+const EMP_TABLE = '<div class="ctx-tbl"><div class="ctx-tbl-h">employees</div>' + dataTable(
+    ['id', 'name', 'dept_id', 'salary', 'hire_date', 'email'],
+    [['1', 'Alice', '101', '70000', '2019-03-15', 'alice@corp.io'],
+     ['2', 'Bob', '102', '85000', '2020-07-01', 'bob@corp.io'],
+     ['3', 'Charlie', '101', '60000', '2021-11-23', 'charlie@corp.io'],
+     ['4', 'Diana', '102', '92000', '2018-01-09', 'diana@corp.io'],
+     ['5', 'Evan', NULLTOK, '55000', '2022-05-30', NULLTOK]]) + '</div>';
+const DEPT_TABLE = '<div class="ctx-tbl"><div class="ctx-tbl-h">departments</div>' + dataTable(
+    ['dept_id', 'dept_name'],
+    [['101', 'IT'], ['102', 'Sales'], ['103', 'HR']]) + '</div>';
 
-        function init() {
-            const sel = document.getElementById('catFilter');
-            const counts = {};
-            funcs.forEach(f => counts[f.c] = (counts[f.c] || 0) + 1);
-            DATA.cats.forEach(c => {
-                const o = document.createElement('option');
-                o.value = c.id;
-                o.textContent = `${c.label} (${counts[c.id] || 0})`;
-                sel.appendChild(o);
-            });
+/* ---------------------------------------------------- build the page */
+const learned = new Set();
+FN.forEach(f => { if (localStorage.getItem(keyOf(f)) === 'true') learned.add(keyOf(f)); });
 
-            const body = document.getElementById('master-body');
-            body.innerHTML = funcs.map((m, i) => {
-                const colour = CATCOLOR[m.c] || '#f97316';
-                const key = `pg-v1-${m.c}-${m.n}`;
-                const isChecked = localStorage.getItem(key) === 'true';
-                const label = (CATLABEL[m.c] || m.c).replace(/^\d+\.\s*/, '');
-                return `<tr class="func-row" data-cat="${esc(m.c)}" data-search="${esc((m.n + ' ' + m.g + ' ' + m.d).toLowerCase())}">
-                    <td style="text-align:center"><input type="checkbox" class="checkbox-custom" ${isChecked ? 'checked' : ''} data-key="${esc(key)}"></td>
-                    <td><span class="type-badge" style="color:${colour}; border:1px solid ${colour}; padding:2px 8px; border-radius:12px; font-size:0.68rem; font-weight:700; white-space:nowrap;">${esc(label)}</span></td>
-                    <td><span class="func-name">${esc(m.n)}</span><span class="sig-text">${esc(m.g)}</span></td>
-                    <td class="desc-text">${esc(m.d)}</td>
-                    <td><button class="play-btn" data-idx="${i}">&#9654;</button></td>
-                </tr>`;
-            }).join('');
+function build() {
+    const navHtml = [], secHtml = [];
+    const counts = {};
+    FN.forEach(f => counts[f.c] = (counts[f.c] || 0) + 1);
 
-            body.addEventListener('click', e => {
-                const btn = e.target.closest('.play-btn');
-                if (btn) runDemo(+btn.dataset.idx);
-            });
-            body.addEventListener('change', e => {
-                if (e.target.classList.contains('checkbox-custom')) {
-                    localStorage.setItem(e.target.dataset.key, e.target.checked);
-                    updateProgress();
-                }
-            });
-            updateProgress();
-            applyFilters();
-        }
+    DATA.cats.forEach(c => {
+        navHtml.push('<a href="#sec-' + c.id + '" data-cat="' + c.id + '" style="--dot:' + c.color + '">' +
+            '<i class="dot"></i><span class="nm">' + esc(shortLabel(c.id)) + '</span>' +
+            '<span class="ct">' + (counts[c.id] || 0) + '</span></a>');
+    });
+    $('#nav').innerHTML = navHtml.join('');
+    $('#cat-count').textContent = DATA.cats.length;
 
-        let typing = 0;
-        async function runDemo(i) {
-            const m = funcs[i];
-            const codeBox = document.getElementById('code-box');
-            const outBox = document.getElementById('output-box');
-
-            document.getElementById('modal').classList.add('active');
-            document.getElementById('notebook-body').scrollTop = 0;
-            document.getElementById('header-fn').textContent = m.n;
-            document.getElementById('doc-sig').textContent = m.g;
-            document.getElementById('doc-desc').textContent = m.d;
-
-            const both = m.q + ' ' + (m.s || '');
-            const usesEmp = /\bemployees\b/.test(both);
-            const usesDept = /\bdepartments\b/.test(both);
-            document.getElementById('schema-emp').style.display = usesEmp ? 'block' : 'none';
-            document.getElementById('schema-dept').style.display = usesDept ? 'block' : 'none';
-            document.getElementById('schema-view').style.display = (usesEmp || usesDept) ? 'block' : 'none';
-
-            const setupCell = document.getElementById('setup-cell');
-            if (m.s) {
-                setupCell.style.display = 'block';
-                document.getElementById('setup-box').innerHTML = highlightSQL(m.s);
-            } else {
-                setupCell.style.display = 'none';
-            }
-
-            codeBox.innerHTML = '';
-            outBox.innerHTML = '';
-
-            const run = ++typing;
-            const step = m.q.length > 220 ? 3 : 1;
-            for (let p = 0; p < m.q.length; p += step) {
-                if (run !== typing) return;
-                codeBox.innerHTML = highlightSQL(m.q.slice(0, p + step));
-                await new Promise(r => setTimeout(r, 8));
-            }
-            codeBox.innerHTML = highlightSQL(m.q);
-            await new Promise(r => setTimeout(r, 150));
-            if (run !== typing) return;
-            outBox.innerHTML = renderOutput(m.o) +
-                (m.v ? '<div class="volatile-note">This function is volatile &mdash; the value changes on every call.</div>' : '');
-        }
-
-        function updateProgress() {
-            const checked = document.querySelectorAll('.checkbox-custom:checked').length;
-            const pct = Math.round((checked / funcs.length) * 100);
-            document.getElementById('progress-bar-fill').style.width = pct + '%';
-            document.getElementById('progress-text').textContent = `${checked}/${funcs.length}`;
-        }
-
-        function resetProgress() {
-            if (confirm('Reset all progress?')) {
-                Object.keys(localStorage).filter(k => k.startsWith('pg-v1-')).forEach(k => localStorage.removeItem(k));
-                location.reload();
-            }
-        }
-
-        function closeModal() { typing++; document.getElementById('modal').classList.remove('active'); }
-
-        function applyFilters() {
-            const q = document.getElementById('searchInput').value.trim().toLowerCase();
-            const cat = document.getElementById('catFilter').value;
-            let shown = 0;
-            document.querySelectorAll('.func-row').forEach(row => {
-                const ok = (cat === 'all' || row.dataset.cat === cat) &&
-                           (q === '' || row.dataset.search.includes(q));
-                row.style.display = ok ? '' : 'none';
-                if (ok) shown++;
-            });
-            document.getElementById('result-count').textContent =
-                `Showing ${shown} of ${funcs.length} functions`;
-            document.getElementById('empty-state').style.display = shown ? 'none' : 'block';
-        }
-
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('catFilter').addEventListener('change', applyFilters);
-        document.getElementById('modal').addEventListener('click', e => {
-            if (e.target.id === 'modal') closeModal();
+    DATA.cats.forEach(c => {
+        const items = [];
+        FN.forEach((f, i) => {
+            if (f.c !== c.id) return;
+            const done = learned.has(keyOf(f)) ? ' done' : '';
+            items.push(
+                '<article class="card' + done + '" data-i="' + i + '" style="--dot:' + c.color + '" ' +
+                'data-s="' + esc((f.n + ' ' + f.g + ' ' + f.d).toLowerCase()) + '">' +
+                '<button class="tick" data-tick="' + i + '" title="Mark as learned" aria-label="Mark as learned">' +
+                '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 5 5L19 6.5"/></svg></button>' +
+                '<div class="card-name">' + esc(f.n) + '</div>' +
+                '<div class="card-sig">' + esc(f.g) + '</div>' +
+                '<div class="card-desc">' + esc(f.d) + '</div></article>');
         });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+        secHtml.push('<section class="sec" id="sec-' + c.id + '" data-cat="' + c.id + '" style="--dot:' + c.color + '">' +
+            '<div class="sec-head"><span class="bar"></span><h2>' + esc(shortLabel(c.id)) + '</h2>' +
+            '<span class="ct">' + items.length + '</span></div>' +
+            '<div class="grid">' + items.join('') + '</div></section>');
+    });
+    $('#sections').innerHTML = secHtml.join('');
+}
 
-        init();
-    </script>
+/* ---------------------------------------------------- progress */
+const RING_LEN = 2 * Math.PI * 19;
+function updateProgress() {
+    const n = learned.size;
+    $('#prog-num').textContent = n + ' / ' + FN.length;
+    $('#ring-bar').style.strokeDashoffset = RING_LEN * (1 - n / FN.length);
+}
+function toggleLearned(i) {
+    const f = FN[i], k = keyOf(f);
+    const on = !learned.has(k);
+    if (on) { learned.add(k); localStorage.setItem(k, 'true'); }
+    else { learned.delete(k); localStorage.removeItem(k); }
+    document.querySelectorAll('.card[data-i="' + i + '"]').forEach(el => el.classList.toggle('done', on));
+    const btn = $('#learn-btn');
+    if (btn && +btn.dataset.i === i) {
+        btn.classList.toggle('on', on);
+        btn.querySelector('span').textContent = on ? 'Learned' : 'Mark as learned';
+    }
+    updateProgress();
+}
+
+/* ---------------------------------------------------- filtering */
+let visible = [];
+function applyFilter() {
+    const q = $('#q').value.trim().toLowerCase();
+    visible = [];
+    document.querySelectorAll('.sec').forEach(sec => {
+        let shown = 0;
+        sec.querySelectorAll('.card').forEach(card => {
+            const ok = !q || card.dataset.s.includes(q);
+            card.classList.toggle('hidden', !ok);
+            if (ok) { shown++; visible.push(+card.dataset.i); }
+        });
+        sec.classList.toggle('hidden', shown === 0);
+        if (shown) sec.querySelector('.sec-head .ct').textContent = shown;
+    });
+    document.querySelectorAll('.nav a').forEach(a => {
+        const sec = document.getElementById('sec-' + a.dataset.cat);
+        a.classList.toggle('hidden', sec.classList.contains('hidden'));
+    });
+    $('#meta').textContent = q
+        ? visible.length + ' of ' + FN.length + ' functions match "' + q + '"'
+        : FN.length + ' functions across ' + DATA.cats.length + ' categories';
+    $('#empty').classList.toggle('hidden', visible.length > 0);
+    $('#empty-q').textContent = q;
+    setKb(-1);
+}
+
+/* ---------------------------------------------------- drawer */
+let current = -1;
+function openDrawer(i) {
+    current = i;
+    const f = FN[i], c = CAT[f.c] || { color: 'var(--accent)', label: f.c };
+    document.documentElement.style.setProperty('--x', '');
+    $('#dr-cat').style.setProperty('--dot', c.color);
+    $('#dr-cat').querySelector('span').textContent = shortLabel(f.c);
+
+    const both = f.q + ' ' + (f.s || '');
+    const useEmp = /\bemployees\b/.test(both), useDept = /\bdepartments\b/.test(both);
+
+    let html = '<div class="dr-title">' + esc(f.n) + '</div>' +
+               '<div class="dr-sig">' + esc(f.g) + '</div>' +
+               '<div class="dr-desc">' + esc(f.d) + '</div>';
+
+    if (useEmp || useDept) {
+        html += '<div class="blk"><div class="blk-lbl">Sample data<span class="line"></span></div>' +
+                '<div class="ctx">' + (useEmp ? EMP_TABLE : '') + (useDept ? DEPT_TABLE : '') + '</div></div>';
+    }
+    if (f.s) {
+        html += '<div class="blk"><div class="blk-lbl">Setup<span class="line"></span></div>' +
+                '<div class="code setup">' + hl(f.s) + '</div></div>';
+    }
+    html += '<div class="blk"><div class="blk-lbl">Query<span class="line"></span>' +
+            '<button class="copy-btn" id="copy-btn">Copy</button></div>' +
+            '<div class="code query">' + hl(f.q) + '</div></div>' +
+            '<div class="blk"><div class="blk-lbl">Result<span class="line"></span></div>' +
+            '<div id="res"><div class="result-wrap"><div class="exec">executing</div></div></div>' +
+            (f.v ? '<div class="tag-volatile">volatile &mdash; the value changes on every call</div>' : '') +
+            '</div>';
+
+    const isDone = learned.has(keyOf(f));
+    html += '<div class="learn-row">' +
+            '<button class="learn-btn' + (isDone ? ' on' : '') + '" id="learn-btn" data-i="' + i + '">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 5 5L19 6.5"/></svg>' +
+            '<span>' + (isDone ? 'Learned' : 'Mark as learned') + '</span></button>' +
+            '<span class="dr-hint">&larr; &rarr; to browse &middot; Esc to close</span></div>';
+
+    const body = $('#dr-body');
+    body.innerHTML = html;
+    body.scrollTop = 0;
+    $('#scrim').classList.add('on');
+    $('#drawer').classList.add('on');
+
+    const pos = visible.indexOf(i);
+    $('#prev-btn').disabled = pos <= 0;
+    $('#next-btn').disabled = pos < 0 || pos >= visible.length - 1;
+
+    const token = ++openToken;
+    setTimeout(() => {
+        if (token !== openToken) return;
+        const res = document.getElementById('res');
+        if (res) res.innerHTML = renderResult(f.o);
+    }, 190);
+}
+let openToken = 0;
+
+function closeDrawer() {
+    openToken++;
+    current = -1;
+    $('#scrim').classList.remove('on');
+    $('#drawer').classList.remove('on');
+}
+function step(d) {
+    const pos = visible.indexOf(current);
+    if (pos < 0) return;
+    const next = pos + d;
+    if (next < 0 || next >= visible.length) return;
+    openDrawer(visible[next]);
+}
+
+/* ---------------------------------------------------- keyboard */
+let kb = -1;
+function setKb(n) {
+    document.querySelectorAll('.card.kb').forEach(el => el.classList.remove('kb'));
+    kb = n;
+    if (n < 0 || n >= visible.length) return;
+    const card = document.querySelector('.card[data-i="' + visible[n] + '"]');
+    if (card) { card.classList.add('kb'); card.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+}
+
+document.addEventListener('keydown', e => {
+    const typing = e.target.tagName === 'INPUT';
+    if (e.key === 'Escape') {
+        if ($('#drawer').classList.contains('on')) closeDrawer();
+        else if (typing) { e.target.value = ''; applyFilter(); e.target.blur(); }
+        return;
+    }
+    if (!typing && (e.key === '/' || (e.key === 'k' && (e.metaKey || e.ctrlKey)))) {
+        e.preventDefault(); $('#q').focus(); $('#q').select(); return;
+    }
+    if ($('#drawer').classList.contains('on')) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); step(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); step(1); }
+        return;
+    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setKb(Math.min(kb + 1, visible.length - 1)); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setKb(Math.max(kb - 1, 0)); }
+    if (e.key === 'Enter' && kb >= 0) { e.preventDefault(); openDrawer(visible[kb]); }
+});
+
+/* ---------------------------------------------------- wiring */
+$('#sections').addEventListener('click', e => {
+    const tick = e.target.closest('.tick');
+    if (tick) { e.stopPropagation(); toggleLearned(+tick.dataset.tick); return; }
+    const card = e.target.closest('.card');
+    if (card) openDrawer(+card.dataset.i);
+});
+$('#dr-body').addEventListener('click', e => {
+    const lb = e.target.closest('#learn-btn');
+    if (lb) { toggleLearned(+lb.dataset.i); return; }
+    const cb = e.target.closest('#copy-btn');
+    if (cb && current >= 0) {
+        navigator.clipboard.writeText(FN[current].q).then(() => {
+            cb.textContent = 'Copied';
+            setTimeout(() => { cb.textContent = 'Copy'; }, 1400);
+        }).catch(() => { cb.textContent = 'Press Ctrl+C'; });
+    }
+});
+$('#q').addEventListener('input', applyFilter);
+$('#scrim').addEventListener('click', closeDrawer);
+$('#close-btn').addEventListener('click', closeDrawer);
+$('#prev-btn').addEventListener('click', () => step(-1));
+$('#next-btn').addEventListener('click', () => step(1));
+$('#reset-btn').addEventListener('click', () => {
+    if (!confirm('Reset progress on all ' + learned.size + ' functions you have marked?')) return;
+    learned.forEach(k => localStorage.removeItem(k));
+    learned.clear();
+    document.querySelectorAll('.card.done').forEach(el => el.classList.remove('done'));
+    updateProgress();
+});
+
+/* ---------------------------------------------------- scroll spy */
+function spy() {
+    const links = [...document.querySelectorAll('.nav a')];
+    const bar = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'));
+    let ticking = false, lastId = null;
+
+    function update() {
+        ticking = false;
+        const line = bar + 24;
+        let id = null;
+        document.querySelectorAll('.sec:not(.hidden)').forEach(sec => {
+            if (sec.getBoundingClientRect().top <= line) id = sec.dataset.cat;
+        });
+        if (!id) {
+            const first = document.querySelector('.sec:not(.hidden)');
+            id = first ? first.dataset.cat : null;
+        }
+        if (id === lastId) return;
+        lastId = id;
+        links.forEach(a => a.classList.toggle('active', a.dataset.cat === id));
+        if (window.innerWidth <= 1080) {
+            const active = links.find(a => a.dataset.cat === id);
+            if (active) active.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+        }
+    }
+    addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(update);
+    }, { passive: true });
+    addEventListener('resize', update, { passive: true });
+    update();
+}
+
+build();
+updateProgress();
+applyFilter();
+spy();
+</script>
 </body>
 </html>

@@ -38,14 +38,22 @@ This is the PostgreSQL companion to [SQL-Master](https://github.com/edusatyaki/S
 
 ## Features
 
-- **Search** by function name, signature or description.
-- **Filter** by category, with per-category counts.
-- **Play button** on every row opens a psql-style notebook: signature, description, the sample
-  data the query runs against, the setup SQL where one is needed, the query typed out, and the
-  real result set.
-- **Progress tracking** — tick off functions as you learn them; progress is stored in
-  `localStorage` and survives reloads.
-- Fully responsive, no build step and no runtime dependencies. It is one HTML file.
+- **Category-first layout** — a sticky sidebar with all 21 categories and live counts, plus
+  scroll-spy highlighting so you always know where you are. Functions sit in a responsive card
+  grid under sticky section headers, not in one endless table.
+- **Instant search** across name, signature and description. Sections and sidebar entries fold
+  away as you type.
+- **Detail drawer** — click any function for a slide-over panel with its signature, description,
+  the sample data the query runs against, the setup SQL where one is needed, the query itself
+  (syntax-highlighted, with a copy button), and the real result set with a row count.
+- **Browse without closing** — arrow keys or the drawer's prev/next buttons step through the
+  current filter, so you can read a whole category in one pass.
+- **Keyboard driven** — `/` or `Cmd/Ctrl+K` to search, `↑` `↓` to move through results, `Enter`
+  to open, `←` `→` to browse, `Esc` to close.
+- **Light and dark themes**, following your OS by default and remembered per browser.
+- **Progress tracking** — mark functions as learned from the card or the drawer; a progress ring
+  keeps the running total. Stored in `localStorage` and survives reloads.
+- Fully responsive, no build step to view, and no runtime dependencies. It is one HTML file.
 
 ## How the output is verified
 
@@ -84,4 +92,4 @@ Pushing to `main` publishes the site to GitHub Pages via
 
 ---
 
-Ideation & development [Satyaki Das](https://github.com/edusatyaki) | PG Innovation v_01.0.0
+Ideation & development [Satyaki Das](https://github.com/edusatyaki) | PG Innovation v_02.0.0
