@@ -36,24 +36,30 @@ This is the PostgreSQL companion to [SQL-Master](https://github.com/edusatyaki/S
 | 21 | Trigger & Event | 15 |
 | | **Total** | **459** |
 
+## Design
+
+Set as a printed technical manual rather than a web dashboard: a warm paper ground, ink-black
+IBM Plex Serif headings, IBM Plex Mono for every function name, signature and result, hairline
+rules instead of cards, numbered sections, and a single navy accent. Syntax colours are chosen
+for print legibility, not to imitate a terminal.
+
 ## Features
 
-- **Category-first layout** — a sticky sidebar with all 21 categories and live counts, plus
-  scroll-spy highlighting so you always know where you are. Functions sit in a responsive card
-  grid under sticky section headers, not in one endless table.
-- **Instant search** across name, signature and description. Sections and sidebar entries fold
+- **Numbered contents rail** listing all 21 sections with entry counts, tracking your position
+  as you scroll. Entries are a dense, rule-separated list, not a grid of cards.
+- **Instant search** across name, signature and description. Sections and contents entries fold
   away as you type.
-- **Detail drawer** — click any function for a slide-over panel with its signature, description,
-  the sample data the query runs against, the setup SQL where one is needed, the query itself
-  (syntax-highlighted, with a copy button), and the real result set with a row count.
-- **Browse without closing** — arrow keys or the drawer's prev/next buttons step through the
-  current filter, so you can read a whole category in one pass.
+- **Reading pane** — click any entry for a side panel with the section locator, signature,
+  description, the sample data the query runs against, the setup SQL where one is needed, the
+  query (syntax-highlighted, with a copy button), and the real result with a row count.
+- **Browse without closing** — arrow keys or the pane's prev/next buttons step through the
+  current filter, so you can read a whole section in one pass.
 - **Keyboard driven** — `/` or `Cmd/Ctrl+K` to search, `↑` `↓` to move through results, `Enter`
   to open, `←` `→` to browse, `F` for fullscreen, `Esc` to close.
 - **Fullscreen** from the top bar or the `F` key, for presenting or distraction-free reading.
-- **Light and dark themes**, following your OS by default and remembered per browser.
-- **Progress tracking** — mark functions as learned from the card or the drawer; a progress ring
-  keeps the running total. Stored in `localStorage` and survives reloads.
+- **Light and dark**, following your OS by default and remembered per browser.
+- **Progress tracking** — mark entries as read from the list or the pane. Stored in
+  `localStorage` and survives reloads.
 - Fully responsive, no build step to view, and no runtime dependencies. It is one HTML file.
 
 ## How the output is verified
@@ -93,4 +99,4 @@ Pushing to `main` publishes the site to GitHub Pages via
 
 ---
 
-Ideation & development [Satyaki Das](https://github.com/edusatyaki) | PG Innovation v_02.0.0
+Ideation & development [Satyaki Das](https://github.com/edusatyaki) | PG Master v2
